@@ -1,6 +1,7 @@
 import "./style.css";
-import { mkSimplexNoise } from "./noise";
 import Rand from "rand-seed";
+
+type Direction = -1 | 1;
 
 type EtchParams = {
   x: number;
@@ -8,40 +9,42 @@ type EtchParams = {
   length: number;
   width: number;
   kink: number;
-  direction: number;
+  direction: Direction;
   lineColor: string;
   dotColor: string;
   drawDot: boolean;
   lineWidth: number;
-  noiseFactor: number;
-  noiseScale: number;
   position: number;
 };
 
-// const fps = 60;
 const debug = false;
 const record = false;
 const drip = true;
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
-const noise = mkSimplexNoise(Math.random).noise2D;
-
-const img = new Image();
-img.src = "public/seas_logo.png";
-img.onload = function () {};
-
 let frame = 0;
 
+// Import the Penn Engineering logo amd wait for it to load.
+const img = new Image();
+img.src = "public/seas_logo.png";
+img.onload = function () {
+  setup();
+};
+
 function setup() {
-  resizeCanvas();
-  window.addEventListener("resize", () => resizeCanvas());
+  const windowWidth = 1200;
+  const windowHeight = 1050;
+  canvas.width = Math.floor(windowWidth * window.devicePixelRatio);
+  canvas.height = Math.floor(windowHeight * window.devicePixelRatio);
+  canvas.style.width = windowWidth + "px";
+  canvas.style.height = windowHeight + "px";
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
   draw();
 }
 
-function position(
-  { x, y, kink, length, width, direction }: EtchParams,
-  t: number
-): [number, number] {
+function position(args: EtchParams, t: number): [number, number] {
+  const { x, y, kink, length, width, direction } = args;
   const yKink = y + kink * length;
   const yWidth = yKink + width;
   const yt = y + t * length;
@@ -60,17 +63,12 @@ function etch(args: EtchParams) {
   ctx.lineWidth = args.lineWidth;
   ctx.strokeStyle = args.lineColor;
   ctx.beginPath();
-  ctx.moveTo(
-    args.x +
-      args.noiseFactor *
-        noise(args.noiseScale * args.x, args.noiseScale * args.y),
-    args.y
-  );
+  ctx.moveTo(args.x, args.y);
   let [tx, ty] = [0, 0];
   const delta = 0.005;
+
   for (let t = 0; t <= 1; t += delta) {
     let [px, py] = position(args, t);
-    px += args.noiseFactor * noise(args.noiseScale * px, args.noiseScale * py);
     if (t >= args.position && t < args.position + delta) {
       [tx, ty] = [px, py];
     }
@@ -78,18 +76,19 @@ function etch(args: EtchParams) {
   }
   ctx.stroke();
   ctx.beginPath();
+
   ctx.save();
   if (args.drawDot) {
     ctx.shadowBlur = 30;
     ctx.shadowColor = "white";
     if (drip) {
       if (tx !== 0 && ty !== 0) {
-        ctx.ellipse(tx, ty, 7, 9, 0, 0, 2 * Math.PI);
+        ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
       }
     } else {
       [tx, ty] = position(args, args.position);
       if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
-        ctx.ellipse(tx, ty, 5, 9, 0, 0, 2 * Math.PI);
+        ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
       }
     }
     ctx.fillStyle = args.dotColor;
@@ -99,14 +98,21 @@ function etch(args: EtchParams) {
 }
 
 function draw() {
-  const prng = new Rand("12");
+  const prng = new Rand("Penn Engineering");
   const t = (frame / 200) % 1;
-  ctx.fillStyle = "#151530";
+  const gradient = ctx.createLinearGradient(0, 0, 0, 1050);
+  gradient.addColorStop(0, "silver");
+  gradient.addColorStop(0.2, "#303060");
+  gradient.addColorStop(0.5, "#101020");
+  gradient.addColorStop(0.8, "#303060");
+  gradient.addColorStop(1, "silver");
+  ctx.fillStyle = gradient;
+  // ctx.fillStyle = "#151530";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   let x = 55;
-  let dir1 = 1;
-  let dir2 = 1;
-  let dir3 = 1;
+  let dir1: Direction = 1;
+  let dir2: Direction = 1;
+  let dir3: Direction = 1;
   while (x < canvas.width / 2 - 50) {
     dir1 = prng.next() > 0.5 ? 1 : -1;
     dir2 = prng.next() > 0.5 ? 1 : -1;
@@ -129,8 +135,6 @@ function draw() {
       dotColor: "#00000000",
       drawDot: false,
       lineWidth: 2.5,
-      noiseFactor: 0,
-      noiseScale: 0.01,
       position: 0,
     });
     etch({
@@ -144,8 +148,6 @@ function draw() {
       dotColor: dotColor,
       position: drip ? (t + prng.next()) % 1 : prng.next(),
       drawDot: true,
-      noiseFactor: 0,
-      noiseScale: 0.01,
       lineWidth: 2.5,
     });
     etch({
@@ -160,8 +162,6 @@ function draw() {
       position: 0,
       drawDot: false,
       lineWidth: 2.5,
-      noiseFactor: 0,
-      noiseScale: 0.01,
     });
     x += 4 + prng.next() * 2 + Math.max(dir1, 0) * 6;
   }
@@ -195,26 +195,14 @@ function draw() {
     ctx.lineTo(1200, 1000);
     ctx.stroke();
   }
-  if (frame > 0 && frame < 16 && record) {
+  if (frame < 200 && record) {
     takeScreenshot(frame);
   }
   frame += 1;
   window.requestAnimationFrame(draw);
 }
 
-function resizeCanvas() {
-  const windowWidth = 1200;
-  const windowHeight = 1050;
-
-  canvas.width = Math.floor(windowWidth * window.devicePixelRatio);
-  canvas.height = Math.floor(windowHeight * window.devicePixelRatio);
-
-  canvas.style.width = windowWidth + "px";
-  canvas.style.height = windowHeight + "px";
-
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-}
-
+// Functions to save the frames as images.
 function dataURIToBlob(dataURI: any) {
   const binStr = window.atob(dataURI.split(",")[1]);
   const len = binStr.length;
@@ -261,5 +249,3 @@ function pad(num: number, size: number): string {
   while (numStr.length < size) numStr = "0" + numStr;
   return numStr;
 }
-
-setup();
