@@ -1,5 +1,6 @@
 import "./style.css";
 import Rand from "rand-seed";
+import GUI from "lil-gui";
 
 type Direction = -1 | 1;
 
@@ -11,15 +12,14 @@ type EtchParams = {
   kink: number;
   direction: Direction;
   lineColor: string;
-  dotColor: string;
-  drawDot: boolean;
+  dotColor?: string;
   lineWidth: number;
   position: number;
 };
 
-const debug = false;
+const tweaks = { debug: false, drip: true };
 const record = false;
-const drip = true;
+
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
 let frame = 0;
@@ -32,6 +32,10 @@ img.onload = function () {
 };
 
 function setup() {
+  const gui = new GUI();
+  gui.add(tweaks, "debug");
+  gui.add(tweaks, "drip");
+
   const windowWidth = 1200;
   const windowHeight = 1050;
   canvas.width = Math.floor(windowWidth * window.devicePixelRatio);
@@ -43,7 +47,7 @@ function setup() {
   draw();
 }
 
-function position(args: EtchParams, t: number): [number, number] {
+function get_position(args: EtchParams, t: number): [number, number] {
   const { x, y, kink, length, width, direction } = args;
   const yKink = y + kink * length;
   const yWidth = yKink + width;
@@ -57,19 +61,21 @@ function position(args: EtchParams, t: number): [number, number] {
   return [xt, yt];
 }
 
+// Draw a single etched line with an optional bead.
 function etch(args: EtchParams) {
+  let { x, y, lineWidth, lineColor, dotColor, position } = args;
   ctx.lineCap = "round";
   ctx.lineJoin = "bevel";
-  ctx.lineWidth = args.lineWidth;
-  ctx.strokeStyle = args.lineColor;
+  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = lineColor;
   ctx.beginPath();
-  ctx.moveTo(args.x, args.y);
+  ctx.moveTo(x, y);
   let [tx, ty] = [0, 0];
   const delta = 0.005;
 
   for (let t = 0; t <= 1; t += delta) {
-    let [px, py] = position(args, t);
-    if (t >= args.position && t < args.position + delta) {
+    let [px, py] = get_position(args, t);
+    if (t >= position && t < position + delta) {
       [tx, ty] = [px, py];
     }
     ctx.lineTo(px, py);
@@ -77,29 +83,34 @@ function etch(args: EtchParams) {
   ctx.stroke();
   ctx.beginPath();
 
+  // If the dotColor is provided draw the bead.
   ctx.save();
-  if (args.drawDot) {
+  if (dotColor) {
     ctx.shadowBlur = 30;
     ctx.shadowColor = "white";
-    if (drip) {
+    if (tweaks.drip) {
       if (tx !== 0 && ty !== 0) {
         ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
       }
     } else {
-      [tx, ty] = position(args, args.position);
+      [tx, ty] = get_position(args, position);
       if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
         ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
       }
     }
-    ctx.fillStyle = args.dotColor;
+    ctx.fillStyle = dotColor;
     ctx.fill();
   }
   ctx.restore();
 }
 
 function draw() {
+  // A seeded random number generator.
   const prng = new Rand("Penn Engineering");
+
   const t = (frame / 200) % 1;
+
+  // Draw the background.
   const gradient = ctx.createLinearGradient(0, 0, 0, 1050);
   gradient.addColorStop(0, "silver");
   gradient.addColorStop(0.2, "#303060");
@@ -107,63 +118,60 @@ function draw() {
   gradient.addColorStop(0.8, "#303060");
   gradient.addColorStop(1, "silver");
   ctx.fillStyle = gradient;
-  // ctx.fillStyle = "#151530";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+
   let x = 55;
-  let dir1: Direction = 1;
-  let dir2: Direction = 1;
-  let dir3: Direction = 1;
+  let dir: Direction;
   while (x < canvas.width / 2 - 50) {
-    dir1 = prng.next() > 0.5 ? 1 : -1;
-    dir2 = prng.next() > 0.5 ? 1 : -1;
-    dir2 = prng.next() > 0.5 ? 1 : -1;
-    const flag = drip ? prng.next() : (prng.next() * (frame / 1)) % 1;
+    dir = prng.next() > 0.5 ? 1 : -1;
+    const flag = tweaks.drip ? prng.next() : (prng.next() * (frame / 1)) % 1;
     let dotColor = "white";
     if (flag < 0.33) {
       dotColor = "#404040";
     } else if (flag < 0.67) {
       dotColor = "silver";
     }
-    etch({
+
+    let etchParams: EtchParams = {
       x: x,
       y: 50 + prng.next() * 5,
       length: 250 - prng.next() * 10,
       width: 5,
       kink: prng.next(),
-      direction: dir1,
+      direction: prng.next() > 0.5 ? 1 : -1,
       lineColor: "hsl(341, 90%, 35%)",
-      dotColor: "#00000000",
-      drawDot: false,
       lineWidth: 2.5,
       position: 0,
-    });
-    etch({
-      x: x,
+    };
+    etch(etchParams);
+
+    etchParams = {
+      ...etchParams,
       y: 350 + prng.next() * 5,
       length: 400 - prng.next() * 10,
       width: 10,
       kink: prng.next(),
-      direction: dir2,
+      direction: dir,
       lineColor: "slategray",
       dotColor: dotColor,
-      position: drip ? (t + prng.next()) % 1 : prng.next(),
-      drawDot: true,
-      lineWidth: 2.5,
-    });
-    etch({
-      x: x,
+      position: tweaks.drip ? (t + prng.next()) % 1 : prng.next(),
+    };
+    etch(etchParams);
+
+    etchParams = {
+      ...etchParams,
       y: 800 + prng.next() * 5,
       length: 200 - prng.next() * 10,
       width: 5,
       kink: prng.next(),
-      direction: dir3,
+      direction: prng.next() > 0.5 ? 1 : -1,
       lineColor: "hsl(210, 90%, 35%)",
-      dotColor: "#00000000",
       position: 0,
-      drawDot: false,
-      lineWidth: 2.5,
-    });
-    x += 4 + prng.next() * 2 + Math.max(dir1, 0) * 6;
+      dotColor: undefined,
+    };
+    etch(etchParams);
+
+    x += 4 + prng.next() * 2 + Math.max(dir, 0) * 6;
   }
 
   ctx.font = "bold 24px arial";
@@ -177,7 +185,7 @@ function draw() {
   ctx.fillText("2024", 430, 600);
   ctx.drawImage(img, 100, 910);
 
-  if (debug) {
+  if (tweaks.debug) {
     ctx.strokeStyle = "green";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -195,10 +203,12 @@ function draw() {
     ctx.lineTo(1200, 1000);
     ctx.stroke();
   }
+
   if (frame < 200 && record) {
     takeScreenshot(frame);
   }
   frame += 1;
+
   window.requestAnimationFrame(draw);
 }
 
