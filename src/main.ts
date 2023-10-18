@@ -17,7 +17,14 @@ type EtchParams = {
   position: number;
 };
 
-const tweaks = { debug: false, drip: true };
+const tweaks = {
+  debug: false,
+  drip: true,
+  steps: 200,
+  color1: "#a0081d",
+  color2: "#BE8304",
+  color3: "#a0081d",
+};
 const record = false;
 
 const canvas = document.querySelector("canvas")!;
@@ -35,6 +42,10 @@ function setup() {
   const gui = new GUI();
   gui.add(tweaks, "debug");
   gui.add(tweaks, "drip");
+  gui.add(tweaks, "steps", 1, 500, 10);
+  gui.addColor(tweaks, "color1");
+  gui.addColor(tweaks, "color2");
+  gui.addColor(tweaks, "color3");
 
   const windowWidth = 1200;
   const windowHeight = 1050;
@@ -49,14 +60,14 @@ function setup() {
 
 function get_position(args: EtchParams, t: number): [number, number] {
   const { x, y, kink, length, width, direction } = args;
-  const yKink = y + kink * length;
-  const yWidth = yKink + width;
+  const yStartKink = y + kink * length;
+  const yEndKink = yStartKink + width;
   const yt = y + t * length;
   let xt = x + width * direction;
-  if (yt < yKink) {
+  if (yt < yStartKink) {
     xt = x;
-  } else if (yt < yWidth) {
-    xt = x + direction * (yt - yKink);
+  } else if (yt < yEndKink) {
+    xt = x + direction * (yt - yStartKink);
   }
   return [xt, yt];
 }
@@ -65,7 +76,6 @@ function get_position(args: EtchParams, t: number): [number, number] {
 function etch(args: EtchParams) {
   let { x, y, lineWidth, lineColor, dotColor, position } = args;
   ctx.lineCap = "round";
-  ctx.lineJoin = "bevel";
   ctx.lineWidth = lineWidth;
   ctx.strokeStyle = lineColor;
   ctx.beginPath();
@@ -108,7 +118,7 @@ function draw() {
   // A seeded random number generator.
   const prng = new Rand("Penn Engineering");
 
-  const t = (frame / 200) % 1;
+  const t = (frame / tweaks.steps) % 1;
 
   // Draw the background.
   const gradient = ctx.createLinearGradient(0, 0, 0, 1050);
@@ -139,7 +149,7 @@ function draw() {
       width: 5,
       kink: prng.next(),
       direction: prng.next() > 0.5 ? 1 : -1,
-      lineColor: "hsl(341, 90%, 35%)",
+      lineColor: tweaks.color1,
       lineWidth: 2.5,
       position: 0,
     };
@@ -152,7 +162,7 @@ function draw() {
       width: 10,
       kink: prng.next(),
       direction: dir,
-      lineColor: "slategray",
+      lineColor: tweaks.color2,
       dotColor: dotColor,
       position: tweaks.drip ? (t + prng.next()) % 1 : prng.next(),
     };
@@ -165,7 +175,7 @@ function draw() {
       width: 5,
       kink: prng.next(),
       direction: prng.next() > 0.5 ? 1 : -1,
-      lineColor: "hsl(210, 90%, 35%)",
+      lineColor: tweaks.color3,
       position: 0,
       dotColor: undefined,
     };
