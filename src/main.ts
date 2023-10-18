@@ -9,8 +9,10 @@ type EtchParams = {
   y: number;
   length: number;
   width: number;
-  kink: number;
-  direction: Direction;
+  kink1: number;
+  kink2: number;
+  direction1: Direction;
+  direction2: Direction;
   lineColor: string;
   dotColor?: string;
   lineWidth: number;
@@ -59,15 +61,23 @@ function setup() {
 }
 
 function get_position(args: EtchParams, t: number): [number, number] {
-  const { x, y, kink, length, width, direction } = args;
-  const yStartKink = y + kink * length;
-  const yEndKink = yStartKink + width;
+  const { x, y, kink1, kink2, length, width, direction1, direction2 } = args;
+  const yStartKink1 = y + kink1 * length;
+  const yEndKink1 = yStartKink1 + width;
+  const yStartKink2 = y + kink2 * length;
+  const yEndKink2 = yStartKink2 + width;
   const yt = y + t * length;
-  let xt = x + width * direction;
-  if (yt < yStartKink) {
+  let xt = x + width * direction1;
+  if (yt < yStartKink1) {
     xt = x;
-  } else if (yt < yEndKink) {
-    xt = x + direction * (yt - yStartKink);
+  } else if (yt < yEndKink1) {
+    xt = x + direction1 * (yt - yStartKink1);
+  } else if (yt < yStartKink2 || yStartKink2 <= yEndKink1) {
+    xt = x + direction1 * width;
+  } else if (yt < yEndKink2) {
+    xt = x + direction1 * width + direction2 * (yt - yStartKink2);
+  } else {
+    xt = x + direction1 * width + direction2 * width;
   }
   return [xt, yt];
 }
@@ -114,6 +124,47 @@ function etch(args: EtchParams) {
   ctx.restore();
 }
 
+function etchRow(
+  x0: number,
+  y0: number,
+  length0: number,
+  width0: number,
+  dot: boolean = false,
+  t: number,
+  color: string,
+  prng: Rand
+) {
+  let x = x0;
+  while (x < canvas.width / 2 - 50) {
+    const direction1 = prng.next() > 0.5 ? 1 : -1;
+    const direction2 = prng.next() > 0.5 ? 1 : -1;
+    const width = width0 * (1 + prng.next());
+    const flag = tweaks.drip ? prng.next() : (prng.next() * (frame / 1)) % 1;
+    let dotColor = "white";
+    if (flag < 0.33) {
+      dotColor = "#404040";
+    } else if (flag < 0.67) {
+      dotColor = "silver";
+    }
+    let etchParams: EtchParams = {
+      x,
+      y: y0 + prng.next() * 5,
+      length: length0 - prng.next() * 10,
+      width,
+      kink1: prng.next(),
+      kink2: prng.next(),
+      direction1,
+      direction2,
+      lineColor: color,
+      lineWidth: 4,
+      position: (t + prng.next()) % 1,
+      dotColor: dot ? dotColor : undefined,
+    };
+    etch(etchParams);
+    x += (1 + prng.next() + Math.max(direction1 + direction2, 0)) * width;
+  }
+}
+
 function draw() {
   // A seeded random number generator.
   const prng = new Rand("Penn Engineering");
@@ -130,59 +181,11 @@ function draw() {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  let x = 55;
-  let dir: Direction;
-  while (x < canvas.width / 2 - 50) {
-    dir = prng.next() > 0.5 ? 1 : -1;
-    const flag = tweaks.drip ? prng.next() : (prng.next() * (frame / 1)) % 1;
-    let dotColor = "white";
-    if (flag < 0.33) {
-      dotColor = "#404040";
-    } else if (flag < 0.67) {
-      dotColor = "silver";
-    }
+  const x = 55;
 
-    let etchParams: EtchParams = {
-      x: x,
-      y: 50 + prng.next() * 5,
-      length: 250 - prng.next() * 10,
-      width: 5,
-      kink: prng.next(),
-      direction: prng.next() > 0.5 ? 1 : -1,
-      lineColor: tweaks.color1,
-      lineWidth: 2.5,
-      position: 0,
-    };
-    etch(etchParams);
-
-    etchParams = {
-      ...etchParams,
-      y: 350 + prng.next() * 5,
-      length: 400 - prng.next() * 10,
-      width: 10,
-      kink: prng.next(),
-      direction: dir,
-      lineColor: tweaks.color2,
-      dotColor: dotColor,
-      position: tweaks.drip ? (t + prng.next()) % 1 : prng.next(),
-    };
-    etch(etchParams);
-
-    etchParams = {
-      ...etchParams,
-      y: 800 + prng.next() * 5,
-      length: 200 - prng.next() * 10,
-      width: 5,
-      kink: prng.next(),
-      direction: prng.next() > 0.5 ? 1 : -1,
-      lineColor: tweaks.color3,
-      position: 0,
-      dotColor: undefined,
-    };
-    etch(etchParams);
-
-    x += 4 + prng.next() * 2 + Math.max(dir, 0) * 6;
-  }
+  etchRow(x, 50, 250, 4, false, t, tweaks.color1, prng);
+  etchRow(x, 350, 400, 5, true, t, tweaks.color2, prng);
+  etchRow(x, 800, 200, 4, false, t, tweaks.color3, prng);
 
   ctx.font = "bold 24px arial";
   ctx.fillStyle = "#EDEDED";
