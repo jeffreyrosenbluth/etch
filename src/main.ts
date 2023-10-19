@@ -22,10 +22,12 @@ type EtchParams = {
 const tweaks = {
   debug: false,
   drip: true,
-  steps: 200,
-  color1: "#a0081d",
-  color2: "#BE8304",
+  steps: 400,
+  etchColor: "#2e43ad",
   color3: "#a0081d",
+  color4: "#ffffff",
+  bgColor: "#121224",
+  glow: 15,
 };
 const record = false;
 
@@ -45,9 +47,11 @@ function setup() {
   gui.add(tweaks, "debug");
   gui.add(tweaks, "drip");
   gui.add(tweaks, "steps", 1, 500, 10);
-  gui.addColor(tweaks, "color1");
-  gui.addColor(tweaks, "color2");
+  gui.addColor(tweaks, "etchColor");
   gui.addColor(tweaks, "color3");
+  gui.addColor(tweaks, "color4");
+  gui.addColor(tweaks, "bgColor");
+  gui.add(tweaks, "glow", 0, 50, 1);
 
   const windowWidth = 1200;
   const windowHeight = 1050;
@@ -106,7 +110,7 @@ function etch(args: EtchParams) {
   // If the dotColor is provided draw the bead.
   ctx.save();
   if (dotColor) {
-    ctx.shadowBlur = 30;
+    ctx.shadowBlur = tweaks.glow;
     ctx.shadowColor = "white";
     if (tweaks.drip) {
       if (tx !== 0 && ty !== 0) {
@@ -138,12 +142,10 @@ function etchRow(
   while (x < canvas.width / 2 - 50) {
     const direction1 = prng.next() > 0.5 ? 1 : -1;
     const direction2 = prng.next() > 0.5 ? 1 : -1;
-    const width = width0 * (1 + prng.next());
-    const flag = tweaks.drip ? prng.next() : (prng.next() * (frame / 1)) % 1;
+    const width = width0 * (2 + prng.next());
+    const flag = prng.next();
     let dotColor = "white";
-    if (flag < 0.33) {
-      dotColor = "#404040";
-    } else if (flag < 0.67) {
+    if (flag < 0.5) {
       dotColor = "silver";
     }
     let etchParams: EtchParams = {
@@ -151,7 +153,7 @@ function etchRow(
       y: y0 + prng.next() * 5,
       length: length0 - prng.next() * 10,
       width,
-      kink1: prng.next(),
+      kink1: 0.75 * prng.next(),
       kink2: prng.next(),
       direction1,
       direction2,
@@ -161,51 +163,55 @@ function etchRow(
       dotColor: dot ? dotColor : undefined,
     };
     etch(etchParams);
-    x += (1 + prng.next() + Math.max(direction1 + direction2, 0)) * width;
+    x += Math.min(
+      1.0 * width,
+      (prng.next() + Math.max(direction1 + direction2, 0.2)) * width
+    );
   }
 }
 
 function draw() {
   // A seeded random number generator.
   const prng = new Rand("Penn Engineering");
-
+  // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
   // Draw the background.
-  const gradient = ctx.createLinearGradient(0, 0, 0, 1050);
-  gradient.addColorStop(0, "silver");
-  gradient.addColorStop(0.2, "#303060");
-  gradient.addColorStop(0.5, "#101020");
-  gradient.addColorStop(0.8, "#303060");
-  gradient.addColorStop(1, "silver");
-  ctx.fillStyle = gradient;
+  // const gradient = ctx.createLinearGradient(0, 0, 0, 1050);
+  // gradient.addColorStop(0, "silver");
+  // gradient.addColorStop(0.2, "#303060");
+  // gradient.addColorStop(0.5, "#101020");
+  // gradient.addColorStop(0.8, "#303060");
+  // gradient.addColorStop(1, "silver");
+  ctx.fillStyle = tweaks.bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  const x = 55;
+  const x = 1200 * 0.382 + 20;
 
-  etchRow(x, 50, 250, 4, false, t, tweaks.color1, prng);
-  etchRow(x, 350, 400, 5, true, t, tweaks.color2, prng);
-  etchRow(x, 800, 200, 4, false, t, tweaks.color3, prng);
+  // etchRow(x, 50, 250, 4, false, t, tweaks.color1, prng);
+  etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
+  // etchRow(x, 800, 200, 4, false, t, tweaks.color3, prng);
 
-  ctx.font = "bold 24px arial";
-  ctx.fillStyle = "#EDEDED";
-  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 650, 960);
-  ctx.font = "bold 48px arial";
-  ctx.fillStyle = "#EDEDED";
-  ctx.fillText("Etching peace into your days", 265, 180);
-  ctx.font = "bold 150px arial";
-  ctx.fillStyle = "#FFFFFFA0";
-  ctx.fillText("2024", 430, 600);
-  ctx.drawImage(img, 100, 910);
+  ctx.font = "bold italic 48px arial";
+  ctx.fillStyle = tweaks.color3;
+  ctx.fillText("Etching peace", 50, 525 - 70);
+  ctx.font = "italic 40px arial";
+  ctx.fillText("into your New Year", 50, 515);
+  ctx.font = "20px arial";
+  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
+
+  ctx.font = "bold 36px arial";
+  ctx.fillStyle = tweaks.color4;
+  ctx.fillText("2024", 315, 750);
+
+  ctx.drawImage(img, 50, 700);
 
   if (tweaks.debug) {
     ctx.strokeStyle = "green";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(0, 550);
-    ctx.lineTo(1200, 550);
-    ctx.moveTo(600, 0);
-    ctx.lineTo(600, 1050);
+    ctx.moveTo(1200 * 0.382, 0);
+    ctx.lineTo(1200 * 0.382, 1050);
     ctx.moveTo(50, 0);
     ctx.lineTo(50, 1050);
     ctx.moveTo(1150, 0);
@@ -214,6 +220,8 @@ function draw() {
     ctx.lineTo(1200, 50);
     ctx.moveTo(0, 1000);
     ctx.lineTo(1200, 1000);
+    ctx.moveTo(0, 0.382 * 1050);
+    ctx.lineTo(1200, 0.382 * 1050);
     ctx.stroke();
   }
 
@@ -226,6 +234,7 @@ function draw() {
 }
 
 // Functions to save the frames as images.
+// This is a bit of a hack but it works.
 function dataURIToBlob(dataURI: any) {
   const binStr = window.atob(dataURI.split(",")[1]);
   const len = binStr.length;
