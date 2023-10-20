@@ -19,17 +19,17 @@ type EtchParams = {
   position: number;
 };
 
+const record = false;
 const tweaks = {
   debug: false,
   drip: true,
-  steps: 200,
+  steps: record ? 200 : 400,
   etchColor: "#8a8c99",
   textColor1: "#9f2132",
   textColor2: "#ffffff",
   bgColor: "#121224",
   glow: 15,
 };
-const record = false;
 
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
