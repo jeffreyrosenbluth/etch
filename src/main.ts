@@ -22,9 +22,9 @@ type EtchParams = {
 const tweaks = {
   debug: false,
   drip: true,
-  steps: 400,
-  etchColor: "#2e43ad",
-  color3: "#a0081d",
+  steps: 200,
+  etchColor: "#8a8c99",
+  color3: "#9f2132",
   color4: "#ffffff",
   bgColor: "#121224",
   glow: 15,
@@ -37,7 +37,7 @@ let frame = 0;
 
 // Import the Penn Engineering logo amd wait for it to load.
 const img = new Image();
-img.src = "public/seas_logo.png";
+img.src = "public/UPenn_Logo_Reverse_225.png";
 img.onload = function () {
   setup();
 };
@@ -171,26 +171,18 @@ function etchRow(
 }
 
 function draw() {
+  // Calculate elapsed time since the last frame
   // A seeded random number generator.
-  const prng = new Rand("Penn Engineering");
+  const prng = new Rand("Penn Engineering Holiday Card");
   // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
-  // Draw the background.
-  // const gradient = ctx.createLinearGradient(0, 0, 0, 1050);
-  // gradient.addColorStop(0, "silver");
-  // gradient.addColorStop(0.2, "#303060");
-  // gradient.addColorStop(0.5, "#101020");
-  // gradient.addColorStop(0.8, "#303060");
-  // gradient.addColorStop(1, "silver");
   ctx.fillStyle = tweaks.bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const x = 1200 * 0.382 + 20;
 
-  // etchRow(x, 50, 250, 4, false, t, tweaks.color1, prng);
   etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
-  // etchRow(x, 800, 200, 4, false, t, tweaks.color3, prng);
 
   ctx.font = "bold italic 48px arial";
   ctx.fillStyle = tweaks.color3;
@@ -200,11 +192,24 @@ function draw() {
   ctx.font = "20px arial";
   ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
 
+  const down = 150;
   ctx.font = "bold 36px arial";
   ctx.fillStyle = tweaks.color4;
-  ctx.fillText("2024", 315, 750);
+  ctx.fillText("2024", 315, 750 + down);
 
-  ctx.drawImage(img, 50, 700);
+  ctx.drawImage(img, 50, 700 + down);
+
+  ctx.fillStyle = "white";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(50, 795 + down);
+  ctx.lineTo(400, 795 + down);
+  ctx.stroke();
+
+  ctx.font = "15px arial";
+  ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 825 + down);
+  // ctx.fillText("Gutman Hall, by Jeffrey M. Rosenbluth Phd", 50, 843);
+  ctx.fillText("Gutman Hall.", 50, 843 + down);
 
   if (tweaks.debug) {
     ctx.strokeStyle = "green";
@@ -225,12 +230,18 @@ function draw() {
     ctx.stroke();
   }
 
-  if (frame < 200 && record) {
+  if (frame > -1 && frame < 200 && record) {
     takeScreenshot(frame);
   }
   frame += 1;
 
-  window.requestAnimationFrame(draw);
+  if (record) {
+    setTimeout(() => {
+      requestAnimationFrame(draw);
+    }, 100);
+  } else {
+    window.requestAnimationFrame(draw);
+  }
 }
 
 // Functions to save the frames as images.
