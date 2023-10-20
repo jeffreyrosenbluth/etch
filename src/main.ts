@@ -24,8 +24,8 @@ const tweaks = {
   drip: true,
   steps: 200,
   etchColor: "#8a8c99",
-  color3: "#9f2132",
-  color4: "#ffffff",
+  textColor1: "#9f2132",
+  textColor2: "#ffffff",
   bgColor: "#121224",
   glow: 15,
 };
@@ -48,8 +48,8 @@ function setup() {
   gui.add(tweaks, "drip");
   gui.add(tweaks, "steps", 1, 500, 10);
   gui.addColor(tweaks, "etchColor");
-  gui.addColor(tweaks, "color3");
-  gui.addColor(tweaks, "color4");
+  gui.addColor(tweaks, "textColor1");
+  gui.addColor(tweaks, "textColor2");
   gui.addColor(tweaks, "bgColor");
   gui.add(tweaks, "glow", 0, 50, 1);
 
@@ -185,7 +185,7 @@ function draw() {
   etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
 
   ctx.font = "bold italic 48px arial";
-  ctx.fillStyle = tweaks.color3;
+  ctx.fillStyle = tweaks.textColor1;
   ctx.fillText("Etching peace", 50, 525 - 70);
   ctx.font = "italic 40px arial";
   ctx.fillText("into your New Year", 50, 515);
@@ -194,7 +194,7 @@ function draw() {
 
   const down = 150;
   ctx.font = "bold 36px arial";
-  ctx.fillStyle = tweaks.color4;
+  ctx.fillStyle = tweaks.textColor2;
   ctx.fillText("2024", 315, 750 + down);
 
   ctx.drawImage(img, 50, 700 + down);
