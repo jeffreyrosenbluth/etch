@@ -24,7 +24,7 @@ const tweaks = {
   debug: false,
   drip: true,
   steps: record ? 200 : 400,
-  etchColor: "#8a8c99",
+  etchColor: "#c0c2ce",
   textColor1: "#cf172f",
   textColor2: "#ffffff",
   bgColor: "#121224",
