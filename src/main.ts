@@ -194,7 +194,7 @@ function draw() {
   ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
 
   const down = 150;
-  ctx.font = "bold 36px Merriweather Sans";
+  ctx.font = "bold 34px Merriweather Sans";
   ctx.fillStyle = tweaks.textColor2;
   ctx.fillText("2024", 315, 750 + down);
 
@@ -209,7 +209,7 @@ function draw() {
 
   ctx.font = "300 15px Merriweather Sans";
   ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 825 + down);
-  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 843);
+  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 825 + down);
   ctx.fillText("Gutmann Hall.", 50, 843 + down);
 
   if (tweaks.debug) {
