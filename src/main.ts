@@ -184,16 +184,17 @@ function draw() {
 
   etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
 
-  ctx.font = "bold italic 48px arial";
+  // ctx.font = "bold italic 48px arial";
+  ctx.font = "bold italic 48px lato";
   ctx.fillStyle = tweaks.textColor1;
-  ctx.fillText("Etching peace", 50, 525 - 70);
-  ctx.font = "italic 40px arial";
-  ctx.fillText("into your New Year", 50, 515);
-  ctx.font = "20px arial";
+  ctx.fillText("Etching Peace", 50, 525 - 70);
+  ctx.font = "italic 40px lato";
+  ctx.fillText("into your New Year", 50, 505);
+  ctx.font = "20px lato";
   ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
 
   const down = 150;
-  ctx.font = "bold 36px arial";
+  ctx.font = "bold 36px lato";
   ctx.fillStyle = tweaks.textColor2;
   ctx.fillText("2024", 315, 750 + down);
 
@@ -206,10 +207,10 @@ function draw() {
   ctx.lineTo(400, 795 + down);
   ctx.stroke();
 
-  ctx.font = "15px arial";
+  ctx.font = "15px lato";
   ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 825 + down);
-  // ctx.fillText("Gutman Hall, by Jeffrey M. Rosenbluth Phd", 50, 843);
-  ctx.fillText("Gutman Hall.", 50, 843 + down);
+  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 843);
+  ctx.fillText("Gutmann Hall.", 50, 843 + down);
 
   if (tweaks.debug) {
     ctx.strokeStyle = "green";
