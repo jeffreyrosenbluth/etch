@@ -24,16 +24,18 @@ const tweaks = {
   debug: false,
   drip: true,
   steps: record ? 200 : 400,
-  etchColor: "#c0c2ce",
+  etchColor: "#aeb1c2",
   textColor1: "#cf172f",
   textColor2: "#ffffff",
   bgColor: "#121224",
   glow: 15,
+  // grain: false,
 };
 
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
 let frame = 0;
+// let backGround: OffscreenCanvas;
 
 // Import the Penn Engineering logo amd wait for it to load.
 const img = new Image();
@@ -52,6 +54,8 @@ function setup() {
   gui.addColor(tweaks, "textColor2");
   gui.addColor(tweaks, "bgColor");
   gui.add(tweaks, "glow", 0, 50, 1);
+  // gui.add(tweaks, "grain");
+  gui.close();
 
   const windowWidth = 1200;
   const windowHeight = 1050;
@@ -60,6 +64,8 @@ function setup() {
   canvas.style.width = windowWidth + "px";
   canvas.style.height = windowHeight + "px";
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+  // backGround = bg(12, 12, 24);
 
   draw();
 }
@@ -170,6 +176,25 @@ function etchRow(
   }
 }
 
+// function bg(r: number, g: number, b: number) {
+//   const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
+//   const offscreenCtx = offscreenCanvas.getContext("2d")!;
+//   const step = 1;
+//   for (let i = 0; i < offscreenCanvas.width; i += step) {
+//     for (let j = 0; j < offscreenCanvas.height; j += step) {
+//       let t = Math.random() * 0.15;
+//       const r1 = r;
+//       // const r1 = (1 - t) * r + t * 255;
+//       const g1 = (1 - t) * g + t * 191;
+//       const b1 = (1 - t) * b + t * 255;
+//       const color = `rgb(${r1}, ${g1}, ${b1})`;
+//       offscreenCtx.fillStyle = color;
+//       offscreenCtx.fillRect(i, j, step, step);
+//     }
+//   }
+//   return offscreenCanvas;
+// }
+
 function draw() {
   // Calculate elapsed time since the last frame
   // A seeded random number generator.
@@ -177,8 +202,12 @@ function draw() {
   // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
+  // if (tweaks.grain) {
+  // ctx.drawImage(backGround, 0, 0);
+  // } else {
   ctx.fillStyle = tweaks.bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // }
 
   const x = 1200 * 0.382 + 20;
 
@@ -207,10 +236,10 @@ function draw() {
   ctx.lineTo(400, 795 + down);
   ctx.stroke();
 
-  ctx.font = "300 15px Merriweather Sans";
-  ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 825 + down);
+  ctx.font = "300 13px Merriweather Sans";
+  ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 822 + down);
   // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 825 + down);
-  ctx.fillText("Gutmann Hall.", 50, 843 + down);
+  ctx.fillText("Gutmann Hall.", 50, 840 + down);
 
   if (tweaks.debug) {
     ctx.strokeStyle = "green";
