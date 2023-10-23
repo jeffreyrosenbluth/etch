@@ -30,8 +30,31 @@ const tweaks = {
   ratio: 0.5,
 };
 
+const width = Math.floor(1200 * window.devicePixelRatio);
+const height = Math.floor(1050 * window.devicePixelRatio);
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
+const offCanvas = new OffscreenCanvas(width, height);
+const offCtx = offCanvas.getContext("2d", { willReadFrequently: true })!;
+
+canvas.width = width;
+canvas.height = height;
+canvas.style.width = "1200px";
+canvas.style.height = "1050px";
+ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+offCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+let result: number[][] = Array.from({ length: width * height }, () =>
+  Array(3).fill(0)
+);
+
+let t = 0;
+let c = 0;
+let samplesPerFrame = 5;
+let numFrames = 80;
+let shutterAngle = 0.5;
+let frameCount = 0;
+
 let frame = 0;
 // let backGround: OffscreenCanvas;
 
@@ -52,14 +75,6 @@ function setup() {
   gui.addColor(tweaks, "bgColor");
   gui.add(tweaks, "ratio", 0, 1, 0.05);
   gui.close();
-
-  const windowWidth = 1200;
-  const windowHeight = 1050;
-  canvas.width = Math.floor(windowWidth * window.devicePixelRatio);
-  canvas.height = Math.floor(windowHeight * window.devicePixelRatio);
-  canvas.style.width = windowWidth + "px";
-  canvas.style.height = windowHeight + "px";
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
   draw();
 }
@@ -89,11 +104,11 @@ function get_position(args: EtchParams, t: number): [number, number] {
 // Draw a single etched line with an optional bead.
 function etch(args: EtchParams) {
   let { x, y, lineWidth, lineColor, dotColor, position } = args;
-  ctx.lineCap = "round";
-  ctx.lineWidth = lineWidth;
-  ctx.strokeStyle = lineColor;
-  ctx.beginPath();
-  ctx.moveTo(x, y);
+  offCtx.lineCap = "round";
+  offCtx.lineWidth = lineWidth;
+  offCtx.strokeStyle = lineColor;
+  offCtx.beginPath();
+  offCtx.moveTo(x, y);
   let [tx, ty] = [0, 0];
   const delta = 0.005;
 
@@ -102,22 +117,22 @@ function etch(args: EtchParams) {
     if (t >= position && t < position + delta) {
       [tx, ty] = [px, py];
     }
-    ctx.lineTo(px, py);
+    offCtx.lineTo(px, py);
   }
-  ctx.stroke();
-  ctx.beginPath();
+  offCtx.stroke();
+  offCtx.beginPath();
 
   // If the dotColor is provided draw the bead.
-  ctx.save();
+  offCtx.save();
   if (dotColor) {
     [tx, ty] = get_position(args, position);
     if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
-      ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
+      offCtx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
     }
-    ctx.fillStyle = dotColor;
-    ctx.fill();
+    offCtx.fillStyle = dotColor;
+    offCtx.fill();
   }
-  ctx.restore();
+  offCtx.restore();
 }
 
 function etchRow(
@@ -162,7 +177,7 @@ function etchRow(
   }
 }
 
-function draw() {
+function draw_() {
   // Calculate elapsed time since the last frame
   // A seeded random number generator.
   const prng = new Rand("Penn Engineering Holiday Card");
@@ -172,8 +187,8 @@ function draw() {
   // if (tweaks.grain) {
   // ctx.drawImage(backGround, 0, 0);
   // } else {
-  ctx.fillStyle = tweaks.bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  offCtx.fillStyle = tweaks.bgColor;
+  offCtx.fillRect(0, 0, offCanvas.width, offCanvas.height);
   // }
 
   const x = 1200 * tweaks.ratio + 20;
@@ -181,64 +196,68 @@ function draw() {
   etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
 
   // ctx.font = "bold italic 48px arial";
-  ctx.font = "italic 52px Merriweather";
-  ctx.fillStyle = tweaks.textColor1;
-  ctx.fillText("Etching Peace", 50, 525 - 70);
-  ctx.font = "italic 44px Merriweather";
-  ctx.fillText("into your New Year", 50, 505);
-  ctx.font = "22px Merriweather Sans";
-  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
+  offCtx.font = "italic 52px Merriweather";
+  offCtx.fillStyle = tweaks.textColor1;
+  offCtx.fillText("Etching Peace", 50, 525 - 70);
+  offCtx.font = "italic 44px Merriweather";
+  offCtx.fillText("into your New Year", 50, 505);
+  offCtx.font = "22px Merriweather Sans";
+  offCtx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
 
   const down = 150;
-  ctx.font = "bold 34px Merriweather Sans";
-  ctx.fillStyle = tweaks.textColor2;
-  ctx.fillText("2024", 355, 750 + down);
+  offCtx.font = "bold 34px Merriweather Sans";
+  offCtx.fillStyle = tweaks.textColor2;
+  offCtx.fillText("2024", 355, 750 + down);
 
-  ctx.drawImage(img, 50, 700 + down);
+  offCtx.drawImage(img, 50, 700 + down);
 
-  ctx.fillStyle = "white";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(50, 795 + down);
-  ctx.lineTo(455, 795 + down);
-  ctx.stroke();
+  offCtx.fillStyle = "white";
+  offCtx.lineWidth = 1;
+  offCtx.beginPath();
+  offCtx.moveTo(50, 795 + down);
+  offCtx.lineTo(455, 795 + down);
+  offCtx.stroke();
 
-  ctx.font = "300 15px Merriweather Sans";
-  ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 822 + down);
-  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 825 + down);
-  ctx.fillText("Gutmann Hall.", 50, 840 + down);
+  offCtx.font = "300 15px Merriweather Sans";
+  offCtx.fillText(
+    "Artwork inspired by the glass etchings of Amy",
+    50,
+    822 + down
+  );
+  // offCtx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 825 + down);
+  offCtx.fillText("Gutmann Hall.", 50, 840 + down);
 
   if (tweaks.debug) {
-    ctx.strokeStyle = "green";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(1200 * tweaks.ratio, 0);
-    ctx.lineTo(1200 * tweaks.ratio, 1050);
-    ctx.moveTo(50, 0);
-    ctx.lineTo(50, 1050);
-    ctx.moveTo(1150, 0);
-    ctx.lineTo(1150, 1050);
-    ctx.moveTo(0, 50);
-    ctx.lineTo(1200, 50);
-    ctx.moveTo(0, 1000);
-    ctx.lineTo(1200, 1000);
-    ctx.moveTo(0, tweaks.ratio * 1050);
-    ctx.lineTo(1200, tweaks.ratio * 1050);
-    ctx.stroke();
+    offCtx.strokeStyle = "green";
+    offCtx.lineWidth = 1;
+    offCtx.beginPath();
+    offCtx.moveTo(1200 * tweaks.ratio, 0);
+    offCtx.lineTo(1200 * tweaks.ratio, 1050);
+    offCtx.moveTo(50, 0);
+    offCtx.lineTo(50, 1050);
+    offCtx.moveTo(1150, 0);
+    offCtx.lineTo(1150, 1050);
+    offCtx.moveTo(0, 50);
+    offCtx.lineTo(1200, 50);
+    offCtx.moveTo(0, 1000);
+    offCtx.lineTo(1200, 1000);
+    offCtx.moveTo(0, tweaks.ratio * 1050);
+    offCtx.lineTo(1200, tweaks.ratio * 1050);
+    offCtx.stroke();
   }
 
-  if (frame > -1 && frame < 200 && record) {
-    takeScreenshot(frame);
-  }
+  // if (frame > -1 && frame < 200 && record) {
+  //   takeScreenshot(frame);
+  // }
   frame += 1;
 
-  if (record) {
-    setTimeout(() => {
-      requestAnimationFrame(draw);
-    }, 100);
-  } else {
-    window.requestAnimationFrame(draw);
-  }
+  // if (record) {
+  //   setTimeout(() => {
+  //     requestAnimationFrame(draw);
+  //   }, 100);
+  // } else {
+  //   window.requestAnimationFrame(draw);
+  // }
 }
 
 // Functions to save the frames as images.
@@ -277,7 +296,7 @@ function defaultFileName(frame: number, ext: string) {
 }
 
 function takeScreenshot(frame: number) {
-  if (!ctx || !canvas) {
+  if (!offCtx || !canvas) {
     return;
   }
   const DataURI = canvas.toDataURL("image/png");
@@ -288,4 +307,67 @@ function pad(num: number, size: number): string {
   let numStr = num.toString();
   while (numStr.length < size) numStr = "0" + numStr;
   return numStr;
+}
+
+function map(
+  x: number,
+  a: number,
+  b: number,
+  c: number,
+  d: number,
+  constr: boolean
+) {
+  let value = ((x - a) / (b - a)) * (d - c) + c;
+  if (constr) {
+    return Math.min(Math.max(value, Math.min(c, d)), Math.max(c, d));
+  }
+  return value;
+}
+
+function draw() {
+  offCtx.clearRect(0, 0, width, height);
+
+  // Reset result array
+  for (let i = 0; i < width * height; i++) {
+    for (let a = 0; a < 3; a++) {
+      result[i][a] = 0;
+    }
+  }
+
+  for (let sa = 0; sa < samplesPerFrame; sa++) {
+    t = map(
+      frameCount - 1 + (sa * shutterAngle) / samplesPerFrame,
+      0,
+      numFrames,
+      0,
+      1,
+      false
+    );
+
+    t %= 1;
+    draw_();
+    let imageData = offCtx.getImageData(0, 0, width, height);
+    let pixels = imageData.data;
+
+    for (let i = 0; i < pixels.length; i += 4) {
+      let idx = i / 4;
+      result[idx][0] += pixels[i];
+      result[idx][1] += pixels[i + 1];
+      result[idx][2] += pixels[i + 2];
+    }
+  }
+
+  let imageData = ctx.createImageData(width, height);
+  let pixels = imageData.data;
+
+  for (let i = 0; i < pixels.length; i += 4) {
+    let idx = i / 4;
+    pixels[i] = result[idx][0] / samplesPerFrame;
+    pixels[i + 1] = result[idx][1] / samplesPerFrame;
+    pixels[i + 2] = result[idx][2] / samplesPerFrame;
+    pixels[i + 3] = 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  requestAnimationFrame(draw);
 }
