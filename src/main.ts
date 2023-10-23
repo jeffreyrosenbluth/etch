@@ -22,14 +22,12 @@ type EtchParams = {
 const record = false;
 const tweaks = {
   debug: false,
-  drip: true,
-  steps: record ? 200 : 400,
+  steps: record ? 200 : 500,
   etchColor: "#aeb1c2",
   textColor1: "#cf172f",
   textColor2: "#ffffff",
   bgColor: "#121224",
-  glow: 15,
-  // grain: false,
+  ratio: 0.5,
 };
 
 const canvas = document.querySelector("canvas")!;
@@ -47,14 +45,12 @@ img.onload = function () {
 function setup() {
   const gui = new GUI();
   gui.add(tweaks, "debug");
-  gui.add(tweaks, "drip");
   gui.add(tweaks, "steps", 1, 500, 10);
   gui.addColor(tweaks, "etchColor");
   gui.addColor(tweaks, "textColor1");
   gui.addColor(tweaks, "textColor2");
   gui.addColor(tweaks, "bgColor");
-  gui.add(tweaks, "glow", 0, 50, 1);
-  // gui.add(tweaks, "grain");
+  gui.add(tweaks, "ratio", 0, 1, 0.05);
   gui.close();
 
   const windowWidth = 1200;
@@ -64,8 +60,6 @@ function setup() {
   canvas.style.width = windowWidth + "px";
   canvas.style.height = windowHeight + "px";
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-
-  // backGround = bg(12, 12, 24);
 
   draw();
 }
@@ -116,17 +110,9 @@ function etch(args: EtchParams) {
   // If the dotColor is provided draw the bead.
   ctx.save();
   if (dotColor) {
-    ctx.shadowBlur = tweaks.glow;
-    ctx.shadowColor = "white";
-    if (tweaks.drip) {
-      if (tx !== 0 && ty !== 0) {
-        ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
-      }
-    } else {
-      [tx, ty] = get_position(args, position);
-      if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
-        ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
-      }
+    [tx, ty] = get_position(args, position);
+    if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
+      ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
     }
     ctx.fillStyle = dotColor;
     ctx.fill();
@@ -176,25 +162,6 @@ function etchRow(
   }
 }
 
-// function bg(r: number, g: number, b: number) {
-//   const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
-//   const offscreenCtx = offscreenCanvas.getContext("2d")!;
-//   const step = 1;
-//   for (let i = 0; i < offscreenCanvas.width; i += step) {
-//     for (let j = 0; j < offscreenCanvas.height; j += step) {
-//       let t = Math.random() * 0.15;
-//       const r1 = r;
-//       // const r1 = (1 - t) * r + t * 255;
-//       const g1 = (1 - t) * g + t * 191;
-//       const b1 = (1 - t) * b + t * 255;
-//       const color = `rgb(${r1}, ${g1}, ${b1})`;
-//       offscreenCtx.fillStyle = color;
-//       offscreenCtx.fillRect(i, j, step, step);
-//     }
-//   }
-//   return offscreenCanvas;
-// }
-
 function draw() {
   // Calculate elapsed time since the last frame
   // A seeded random number generator.
@@ -209,23 +176,23 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   // }
 
-  const x = 1200 * 0.382 + 20;
+  const x = 1200 * tweaks.ratio + 20;
 
   etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
 
   // ctx.font = "bold italic 48px arial";
-  ctx.font = "italic 48px Merriweather";
+  ctx.font = "italic 52px Merriweather";
   ctx.fillStyle = tweaks.textColor1;
   ctx.fillText("Etching Peace", 50, 525 - 70);
-  ctx.font = "italic 40px Merriweather";
+  ctx.font = "italic 44px Merriweather";
   ctx.fillText("into your New Year", 50, 505);
-  ctx.font = "20px Merriweather Sans";
+  ctx.font = "22px Merriweather Sans";
   ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
 
   const down = 150;
   ctx.font = "bold 34px Merriweather Sans";
   ctx.fillStyle = tweaks.textColor2;
-  ctx.fillText("2024", 315, 750 + down);
+  ctx.fillText("2024", 355, 750 + down);
 
   ctx.drawImage(img, 50, 700 + down);
 
@@ -233,10 +200,10 @@ function draw() {
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(50, 795 + down);
-  ctx.lineTo(400, 795 + down);
+  ctx.lineTo(455, 795 + down);
   ctx.stroke();
 
-  ctx.font = "300 13px Merriweather Sans";
+  ctx.font = "300 15px Merriweather Sans";
   ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 822 + down);
   // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 825 + down);
   ctx.fillText("Gutmann Hall.", 50, 840 + down);
@@ -245,8 +212,8 @@ function draw() {
     ctx.strokeStyle = "green";
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(1200 * 0.382, 0);
-    ctx.lineTo(1200 * 0.382, 1050);
+    ctx.moveTo(1200 * tweaks.ratio, 0);
+    ctx.lineTo(1200 * tweaks.ratio, 1050);
     ctx.moveTo(50, 0);
     ctx.lineTo(50, 1050);
     ctx.moveTo(1150, 0);
@@ -255,8 +222,8 @@ function draw() {
     ctx.lineTo(1200, 50);
     ctx.moveTo(0, 1000);
     ctx.lineTo(1200, 1000);
-    ctx.moveTo(0, 0.382 * 1050);
-    ctx.lineTo(1200, 0.382 * 1050);
+    ctx.moveTo(0, tweaks.ratio * 1050);
+    ctx.lineTo(1200, tweaks.ratio * 1050);
     ctx.stroke();
   }
 
