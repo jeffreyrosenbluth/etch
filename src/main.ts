@@ -21,19 +21,21 @@ type EtchParams = {
 
 const record = false;
 const tweaks = {
-  debug: false,
+  guides: false,
   steps: record ? 200 : 500,
   etchColor: "#aeb1c2",
   textColor1: "#cf172f",
   textColor2: "#ffffff",
   bgColor: "#121224",
+  dotColor: "#ffffff",
+  dotSize: 4,
+  dotTrail: 0,
   ratio: 0.5,
 };
 
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
 let frame = 0;
-// let backGround: OffscreenCanvas;
 
 // Import the Penn Engineering logo amd wait for it to load.
 const img = new Image();
@@ -44,13 +46,15 @@ img.onload = function () {
 
 function setup() {
   const gui = new GUI();
-  gui.add(tweaks, "debug");
   gui.add(tweaks, "steps", 1, 500, 10);
   gui.addColor(tweaks, "etchColor");
   gui.addColor(tweaks, "textColor1");
   gui.addColor(tweaks, "textColor2");
   gui.addColor(tweaks, "bgColor");
-  gui.add(tweaks, "ratio", 0, 1, 0.05);
+  gui.addColor(tweaks, "dotColor");
+  gui.add(tweaks, "dotSize", 1, 10, 0.5);
+  gui.add(tweaks, "dotTrail", 0, 0.95, 0.05);
+  gui.add(tweaks, "guides");
   gui.close();
 
   const windowWidth = 1200;
@@ -61,6 +65,10 @@ function setup() {
   canvas.style.height = windowHeight + "px";
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
+  ctx.save();
+  ctx.fillStyle = tweaks.bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
   draw();
 }
 
@@ -107,12 +115,11 @@ function etch(args: EtchParams) {
   ctx.stroke();
   ctx.beginPath();
 
-  // If the dotColor is provided draw the bead.
   ctx.save();
   if (dotColor) {
     [tx, ty] = get_position(args, position);
     if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
-      ctx.ellipse(tx, ty, 6, 9, 0, 0, 2 * Math.PI);
+      ctx.ellipse(tx, ty, tweaks.dotSize, tweaks.dotSize, 0, 0, 2 * Math.PI);
     }
     ctx.fillStyle = dotColor;
     ctx.fill();
@@ -125,21 +132,18 @@ function etchRow(
   y0: number,
   length0: number,
   width0: number,
-  dot: boolean = false,
   t: number,
-  color: string,
+  lineColor: string,
+  dotColor: string,
+  stop: number,
   prng: Rand
 ) {
   let x = x0;
-  while (x < canvas.width / 2 - 50) {
+  while (x < stop) {
+    // while (x < canvas.width / 2 - 50) {
     const direction1 = prng.next() > 0.5 ? 1 : -1;
     const direction2 = prng.next() > 0.5 ? 1 : -1;
     const width = width0 * (2 + prng.next());
-    const flag = prng.next();
-    let dotColor = "white";
-    if (flag < 0.5) {
-      dotColor = "silver";
-    }
     let etchParams: EtchParams = {
       x,
       y: y0 + prng.next() * 5,
@@ -149,10 +153,10 @@ function etchRow(
       kink2: prng.next(),
       direction1,
       direction2,
-      lineColor: color,
-      lineWidth: 4,
+      lineColor: lineColor,
+      lineWidth: 3,
       position: (t + prng.next()) % 1,
-      dotColor: dot ? dotColor : undefined,
+      dotColor: dotColor,
     };
     etch(etchParams);
     x += Math.min(
@@ -162,25 +166,7 @@ function etchRow(
   }
 }
 
-function draw() {
-  // Calculate elapsed time since the last frame
-  // A seeded random number generator.
-  const prng = new Rand("Penn Engineering Holiday Card");
-  // t goes from 0 to 1 used to positon the dot at as time moves.
-  const t = (frame / tweaks.steps) % 1;
-
-  // if (tweaks.grain) {
-  // ctx.drawImage(backGround, 0, 0);
-  // } else {
-  ctx.fillStyle = tweaks.bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // }
-
-  const x = 1200 * tweaks.ratio + 20;
-
-  etchRow(x, 50, 950, 8, true, t, tweaks.etchColor, prng);
-
-  // ctx.font = "bold italic 48px arial";
+function drawText() {
   ctx.font = "italic 52px Merriweather";
   ctx.fillStyle = tweaks.textColor1;
   ctx.fillText("Etching Peace", 50, 525 - 70);
@@ -205,10 +191,38 @@ function draw() {
 
   ctx.font = "300 15px Merriweather Sans";
   ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 822 + down);
-  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 825 + down);
+  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 822 + down);
   ctx.fillText("Gutmann Hall.", 50, 840 + down);
+}
 
-  if (tweaks.debug) {
+function draw() {
+  // Calculate elapsed time since the last frame
+  // A seeded random number generator.
+  const prng = new Rand("Penn Engineering Holiday Card");
+  // t goes from 0 to 1 used to positon the dot at as time moves.
+  const t = (frame / tweaks.steps) % 1;
+
+  ctx.globalAlpha = 1 - tweaks.dotTrail;
+  ctx.fillStyle = tweaks.bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.globalAlpha = 1.0;
+
+  const x = 1200 * tweaks.ratio + 20;
+
+  etchRow(
+    x,
+    50,
+    950,
+    8,
+    t,
+    tweaks.etchColor,
+    tweaks.dotColor,
+    canvas.width / 2 - 50,
+    prng
+  );
+  drawText();
+
+  if (tweaks.guides) {
     ctx.strokeStyle = "green";
     ctx.lineWidth = 1;
     ctx.beginPath();
