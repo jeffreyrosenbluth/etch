@@ -29,7 +29,8 @@ const tweaks = {
   bgColor: "#121224",
   dotColor: "#ffffff",
   dotSize: 4,
-  dotTrail: 0,
+  dotTrail: 0.55,
+  snow: true,
   ratio: 0.5,
 };
 
@@ -54,6 +55,7 @@ function setup() {
   gui.addColor(tweaks, "dotColor");
   gui.add(tweaks, "dotSize", 1, 10, 0.5);
   gui.add(tweaks, "dotTrail", 0, 0.95, 0.05);
+  gui.add(tweaks, "snow");
   gui.add(tweaks, "guides");
   gui.close();
 
@@ -208,7 +210,6 @@ function draw() {
   ctx.globalAlpha = 1.0;
 
   const x = 1200 * tweaks.ratio + 20;
-
   etchRow(
     x,
     50,
@@ -220,6 +221,20 @@ function draw() {
     canvas.width / 2 - 50,
     prng
   );
+  if (tweaks.snow) {
+    etchRow(
+      50,
+      50,
+      950,
+      8,
+      t,
+      "#00000000",
+      tweaks.dotColor,
+      canvas.width / 4,
+      prng
+    );
+  }
+
   drawText();
 
   if (tweaks.guides) {
