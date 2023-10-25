@@ -15,6 +15,7 @@ type EtchParams = {
   direction2: Direction;
   lineColor: string;
   dotColor: string;
+  dotSize: number;
   lineWidth: number;
   position: number;
 };
@@ -35,7 +36,8 @@ const tweaks = {
   bgColor: "#FAF0E6",
   dotColor: "#ffffff",
   dotSize: 8,
-  dotTrail: 0.6,
+  trail: 0.6,
+  snowSize: 8,
   logo: "Dark",
   snow: false,
   ratio: 0.5,
@@ -70,10 +72,11 @@ function setup() {
   gui.addColor(tweaks, "textColor2").name("Footnote Color");
   gui.addColor(tweaks, "bgColor").name("Background Color");
   // gui.addColor(tweaks, "dotColor").name("Dot Color");
-  gui.add(tweaks, "dotSize", 1, 10, 0.5).name("Dot Size");
-  gui.add(tweaks, "dotTrail", 1, 10, 0.5).name("Dot Trail");
-  gui.add(tweaks, "logo", ["Light", "Dark"]).name("Logo");
+  gui.add(tweaks, "dotSize", 1, 20, 0.5).name("Dot Size");
   gui.add(tweaks, "snow").name("Snow");
+  gui.add(tweaks, "snowSize", 1, 20, 0.5).name("Snow Size");
+  gui.add(tweaks, "trail", 0, 0.95, 0.05).name("Trail Length");
+  gui.add(tweaks, "logo", ["Light", "Dark"]).name("Logo");
 
   gui.close();
 
@@ -116,7 +119,7 @@ function get_position(args: EtchParams, t: number): [number, number] {
 
 // Draw a single etched line with an optional bead.
 function etch(args: EtchParams) {
-  let { x, y, lineWidth, lineColor, dotColor, position } = args;
+  let { x, y, lineWidth, lineColor, dotColor, dotSize, position } = args;
   ctx.lineCap = "round";
   ctx.lineWidth = lineWidth;
   ctx.strokeStyle = lineColor;
@@ -137,7 +140,7 @@ function etch(args: EtchParams) {
 
   ctx.save();
   [tx, ty] = get_position(args, position);
-  ctx.ellipse(tx, ty, tweaks.dotSize, tweaks.dotSize, 0, 0, 2 * Math.PI);
+  ctx.ellipse(tx, ty, dotSize, dotSize, 0, 0, 2 * Math.PI);
   ctx.fillStyle = dotColor;
   ctx.fill();
   ctx.restore();
@@ -151,6 +154,7 @@ function etchRow(
   t: number,
   lineColor: string,
   dotColor: string,
+  dotSize: number,
   stop: number,
   prng: Rand
 ) {
@@ -172,6 +176,7 @@ function etchRow(
       lineWidth: 3,
       position: (t + prng.next()) % 1,
       dotColor: colors[Math.floor(6 * prng.next())],
+      dotSize,
     };
     etch(etchParams);
     x += Math.min(
@@ -224,7 +229,7 @@ function draw() {
   // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
-  ctx.globalAlpha = 1 - tweaks.dotTrail;
+  ctx.globalAlpha = 1 - tweaks.trail;
   ctx.fillStyle = tweaks.bgColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.globalAlpha = 1.0;
@@ -238,6 +243,7 @@ function draw() {
     t,
     tweaks.etchColor,
     tweaks.dotColor,
+    tweaks.dotSize,
     canvas.width / 2 - 50,
     prng
   );
@@ -250,6 +256,7 @@ function draw() {
       t,
       "#00000000",
       tweaks.dotColor,
+      tweaks.snowSize,
       canvas.width / 4,
       prng
     );
