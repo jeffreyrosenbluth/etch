@@ -75,7 +75,6 @@ function setup() {
   gui.add(tweaks, "logo", ["Light", "Dark"]).name("Logo");
   gui.add(tweaks, "snow").name("Snow");
   // gui.add(tweaks, "guides");
-
   gui.close();
 
   const windowWidth = 1200;
