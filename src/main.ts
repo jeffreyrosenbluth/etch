@@ -33,7 +33,7 @@ const tweaks = {
   messageColor: PennRed,
   textColor2: PennBlue,
   bgColor: "#FAF0E6",
-  // dotColor: "#ffffff",
+  dotColor: "#ffffff",
   dotSize: 8,
   dotTrail: 0.6,
   logo: "Dark",
@@ -72,7 +72,7 @@ function setup() {
   // gui.addColor(tweaks, "dotColor").name("Dot Color");
   gui.add(tweaks, "dotSize", 1, 10, 0.5).name("Dot Size");
   gui.add(tweaks, "dotTrail", 1, 10, 0.5).name("Dot Trail");
-  gui.add(tweaks, "logo", ["Light", "Dark"]);
+  gui.add(tweaks, "logo", ["Light", "Dark"]).name("Logo");
   gui.add(tweaks, "snow").name("Snow");
   // gui.add(tweaks, "guides");
   gui.close();
