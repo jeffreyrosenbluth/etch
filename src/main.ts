@@ -22,6 +22,7 @@ type EtchParams = {
 const record = false;
 const PennRed = "#990000";
 const PennBlue = "#010F5B";
+const EtchGray = "#aeb1c2";
 
 const tweaks = {
   guides: false,
@@ -29,41 +30,51 @@ const tweaks = {
   etchColor: PennBlue,
   // etchColor: "#aeb1c2",
   // textColor1: "#e1092a",
-  textColor1: PennRed,
+  messageColor: PennRed,
   textColor2: PennBlue,
-  bgColor: "linen",
-  dotColor: "#ffffff",
+  bgColor: "#FAF0E6",
+  // dotColor: "#ffffff",
   dotSize: 8,
   dotTrail: 0.6,
+  logo: "Dark",
   snow: false,
   ratio: 0.5,
 };
 
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
-const colors = ["#096dda", "#00be43", "#f90302", "#fc5401", "#6d51f2"];
+const colors = ["white", "#096dda", "#00be43", "#f90302", "#fc5401", "#6d51f2"];
 
 let frame = 0;
 
 // Import the Penn Engineering logo amd wait for it to load.
-const img = new Image();
-img.src = "public/UPenn_Logo_RGB_225.png";
-img.onload = function () {
-  setup();
+const logoLight = new Image();
+const logoDark = new Image();
+logoDark.src = "UPenn_Logo_RGB_225.png";
+logoLight.src = "UPenn_Logo_Reverse_225.png";
+logoDark.onload = function () {
+  loadLightLogo();
 };
+
+function loadLightLogo() {
+  logoLight.onload = function () {
+    setup();
+  };
+}
 
 function setup() {
   const gui = new GUI();
   gui.add(tweaks, "steps", 1, 500, 10);
-  gui.addColor(tweaks, "etchColor");
-  gui.addColor(tweaks, "textColor1");
-  gui.addColor(tweaks, "textColor2");
-  gui.addColor(tweaks, "bgColor");
-  gui.addColor(tweaks, "dotColor");
-  gui.add(tweaks, "dotSize", 1, 10, 0.5);
-  gui.add(tweaks, "dotTrail", 0, 0.95, 0.05);
-  gui.add(tweaks, "snow");
-  gui.add(tweaks, "guides");
+  gui.addColor(tweaks, "etchColor").name("Etch Color");
+  gui.addColor(tweaks, "messageColor").name("Message Color");
+  gui.addColor(tweaks, "textColor2").name("Footnote Color");
+  gui.addColor(tweaks, "bgColor").name("Background Color");
+  // gui.addColor(tweaks, "dotColor").name("Dot Color");
+  gui.add(tweaks, "dotSize", 1, 10, 0.5).name("Dot Size");
+  gui.add(tweaks, "dotTrail", 1, 10, 0.5).name("Dot Trail");
+  gui.add(tweaks, "logo", ["Light", "Dark"]);
+  gui.add(tweaks, "snow").name("Snow");
+  // gui.add(tweaks, "guides");
   gui.close();
 
   const windowWidth = 1200;
@@ -126,9 +137,7 @@ function etch(args: EtchParams) {
 
   ctx.save();
   [tx, ty] = get_position(args, position);
-  if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
-    ctx.ellipse(tx, ty, tweaks.dotSize, tweaks.dotSize, 0, 0, 2 * Math.PI);
-  }
+  ctx.ellipse(tx, ty, tweaks.dotSize, tweaks.dotSize, 0, 0, 2 * Math.PI);
   ctx.fillStyle = dotColor;
   ctx.fill();
   ctx.restore();
@@ -162,7 +171,7 @@ function etchRow(
       lineColor: lineColor,
       lineWidth: 3,
       position: (t + prng.next()) % 1,
-      dotColor: colors[Math.floor(5 * prng.next())],
+      dotColor: colors[Math.floor(6 * prng.next())],
     };
     etch(etchParams);
     x += Math.min(
@@ -174,7 +183,7 @@ function etchRow(
 
 function drawText() {
   ctx.font = "italic 52px Merriweather";
-  ctx.fillStyle = tweaks.textColor1;
+  ctx.fillStyle = tweaks.messageColor;
   ctx.fillText("Etching Peace", 50, 525 - 70);
   ctx.font = "italic 44px Merriweather";
   ctx.fillText("into your New Year", 50, 505);
@@ -186,7 +195,11 @@ function drawText() {
   ctx.fillStyle = tweaks.textColor2;
   ctx.fillText("2024", 355, 750 + down);
 
-  ctx.drawImage(img, 50, 700 + down);
+  if (tweaks.logo === "Light") {
+    ctx.drawImage(logoLight, 50, 700 + down);
+  } else {
+    ctx.drawImage(logoDark, 50, 700 + down);
+  }
 
   // ctx.fillStyle = "white";
   ctx.lineWidth = 1;
@@ -201,11 +214,7 @@ function drawText() {
     50,
     822 + down
   );
-  ctx.fillText(
-    "Hall. Designed by Jeffrey M. Rosenbluth PhD, Eng '84.",
-    50,
-    845 + down
-  );
+  ctx.fillText("Hall. Designed by Jeffrey M. Rosenbluth.", 50, 845 + down);
 }
 
 function draw() {
