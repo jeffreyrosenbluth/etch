@@ -74,7 +74,6 @@ function setup() {
   gui.add(tweaks, "dotTrail", 1, 10, 0.5).name("Dot Trail");
   gui.add(tweaks, "logo", ["Light", "Dark"]).name("Logo");
   gui.add(tweaks, "snow").name("Snow");
-  // gui.add(tweaks, "guides");
 
   gui.close();
 
