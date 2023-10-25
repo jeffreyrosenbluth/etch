@@ -28,17 +28,15 @@ const EtchGray = "#aeb1c2";
 const tweaks = {
   guides: false,
   steps: record ? 200 : 500,
-  etchColor: PennBlue,
-  // etchColor: "#aeb1c2",
-  // textColor1: "#e1092a",
-  messageColor: PennRed,
-  textColor2: PennBlue,
-  bgColor: "#FAF0E6",
+  etchColor: "#aeb1c2",
+  messageColor: "#b30015",
+  footnoteColor: "#f5f5f5",
+  bgColor: "#000d30",
   dotColor: "#ffffff",
-  dotSize: 8,
-  trail: 0.6,
+  dotSize: 9,
+  trail: 0,
   snowSize: 8,
-  logo: "Dark",
+  logo: "Light",
   snow: false,
   ratio: 0.5,
 };
@@ -69,7 +67,7 @@ function setup() {
   gui.add(tweaks, "steps", 1, 500, 10).name("Steps");
   gui.addColor(tweaks, "etchColor").name("Etch Color");
   gui.addColor(tweaks, "messageColor").name("Message Color");
-  gui.addColor(tweaks, "textColor2").name("Footnote Color");
+  gui.addColor(tweaks, "footnoteColor").name("Footnote Color");
   gui.addColor(tweaks, "bgColor").name("Background Color");
   // gui.addColor(tweaks, "dotColor").name("Dot Color");
   gui.add(tweaks, "dotSize", 1, 20, 0.5).name("Dot Size");
@@ -197,7 +195,7 @@ function drawText() {
 
   const down = 150;
   ctx.font = "bold 34px Merriweather Sans";
-  ctx.fillStyle = tweaks.textColor2;
+  ctx.fillStyle = tweaks.footnoteColor;
   ctx.fillText("2024", 355, 750 + down);
 
   if (tweaks.logo === "Light") {
