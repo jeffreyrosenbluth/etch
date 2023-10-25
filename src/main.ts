@@ -14,33 +14,40 @@ type EtchParams = {
   direction1: Direction;
   direction2: Direction;
   lineColor: string;
-  dotColor?: string;
+  dotColor: string;
   lineWidth: number;
   position: number;
 };
 
 const record = false;
+const PennRed = "#990000";
+const PennBlue = "#010F5B";
+
 const tweaks = {
   guides: false,
   steps: record ? 200 : 500,
-  etchColor: "#aeb1c2",
-  textColor1: "#cf172f",
-  textColor2: "#ffffff",
-  bgColor: "#121224",
+  etchColor: PennBlue,
+  // etchColor: "#aeb1c2",
+  // textColor1: "#e1092a",
+  textColor1: PennRed,
+  textColor2: PennBlue,
+  bgColor: "linen",
   dotColor: "#ffffff",
-  dotSize: 4,
-  dotTrail: 0.55,
-  snow: true,
+  dotSize: 8,
+  dotTrail: 0.6,
+  snow: false,
   ratio: 0.5,
 };
 
 const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
+const colors = ["#096dda", "#00be43", "#f90302", "#fc5401", "#6d51f2"];
+
 let frame = 0;
 
 // Import the Penn Engineering logo amd wait for it to load.
 const img = new Image();
-img.src = "public/UPenn_Logo_Reverse_225.png";
+img.src = "public/UPenn_Logo_RGB_225.png";
 img.onload = function () {
   setup();
 };
@@ -118,14 +125,12 @@ function etch(args: EtchParams) {
   ctx.beginPath();
 
   ctx.save();
-  if (dotColor) {
-    [tx, ty] = get_position(args, position);
-    if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
-      ctx.ellipse(tx, ty, tweaks.dotSize, tweaks.dotSize, 0, 0, 2 * Math.PI);
-    }
-    ctx.fillStyle = dotColor;
-    ctx.fill();
+  [tx, ty] = get_position(args, position);
+  if (tx < 400 || tx > 765 || ty < 475 || ty > 615) {
+    ctx.ellipse(tx, ty, tweaks.dotSize, tweaks.dotSize, 0, 0, 2 * Math.PI);
   }
+  ctx.fillStyle = dotColor;
+  ctx.fill();
   ctx.restore();
 }
 
@@ -142,7 +147,6 @@ function etchRow(
 ) {
   let x = x0;
   while (x < stop) {
-    // while (x < canvas.width / 2 - 50) {
     const direction1 = prng.next() > 0.5 ? 1 : -1;
     const direction2 = prng.next() > 0.5 ? 1 : -1;
     const width = width0 * (2 + prng.next());
@@ -158,7 +162,7 @@ function etchRow(
       lineColor: lineColor,
       lineWidth: 3,
       position: (t + prng.next()) % 1,
-      dotColor: dotColor,
+      dotColor: colors[Math.floor(5 * prng.next())],
     };
     etch(etchParams);
     x += Math.min(
@@ -184,7 +188,7 @@ function drawText() {
 
   ctx.drawImage(img, 50, 700 + down);
 
-  ctx.fillStyle = "white";
+  // ctx.fillStyle = "white";
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(50, 795 + down);
@@ -192,15 +196,22 @@ function drawText() {
   ctx.stroke();
 
   ctx.font = "300 15px Merriweather Sans";
-  ctx.fillText("Artwork inspired by the glass etchings of Amy", 50, 822 + down);
-  // ctx.fillText("Gutmann Hall, by Jeffrey M. Rosenbluth Phd", 50, 822 + down);
-  ctx.fillText("Gutmann Hall.", 50, 840 + down);
+  ctx.fillText(
+    "Artwork inspired by the glass etchings of Amy Gutmann",
+    50,
+    822 + down
+  );
+  ctx.fillText(
+    "Hall. Designed by Jeffrey M. Rosenbluth PhD, Eng '84.",
+    50,
+    845 + down
+  );
 }
 
 function draw() {
   // Calculate elapsed time since the last frame
   // A seeded random number generator.
-  const prng = new Rand("Penn Engineering Holiday Card");
+  const prng = new Rand("Penn Engineering 002 White");
   // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
