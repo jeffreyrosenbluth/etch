@@ -64,7 +64,7 @@ function loadLightLogo() {
 
 function setup() {
   const gui = new GUI();
-  gui.add(tweaks, "steps", 1, 500, 10);
+  gui.add(tweaks, "steps", 1, 500, 10).name("Steps");
   gui.addColor(tweaks, "etchColor").name("Etch Color");
   gui.addColor(tweaks, "messageColor").name("Message Color");
   gui.addColor(tweaks, "textColor2").name("Footnote Color");
