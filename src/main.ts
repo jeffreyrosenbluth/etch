@@ -28,15 +28,15 @@ const EtchGray = "#aeb1c2";
 const tweaks = {
   guides: false,
   steps: record ? 200 : 500,
-  etchColor: "#aeb1c2",
-  messageColor: "#b30015",
-  footnoteColor: "#f5f5f5",
+  etchColor: "#011f5b", // aeb1c2
+  messageColor: "#990000", //b30015
+  footnoteColor: "#011f5b", // #f5f5f5
   bgColor: "#000d30",
   dotColor: "#ffffff",
-  dotSize: 9,
+  dotSize: 7, // 9
   trail: 0,
   snowSize: 8,
-  logo: "Light",
+  logo: "Dark",
   snow: false,
   ratio: 0.5,
 };
@@ -50,11 +50,24 @@ let frame = 0;
 // Import the Penn Engineering logo amd wait for it to load.
 const logoLight = new Image();
 const logoDark = new Image();
+const agh = new Image();
 logoDark.src = "UPenn_Logo_RGB_225.png";
 logoLight.src = "UPenn_Logo_Reverse_225.png";
+agh.src = "agh_south_rendering_light.jpeg";
+
+agh.onload = function () {
+  loadDarkLogo();
+};
+
 logoDark.onload = function () {
   loadLightLogo();
 };
+
+function loadDarkLogo() {
+  logoDark.onload = function () {
+    loadLightLogo();
+  };
+}
 
 function loadLightLogo() {
   logoLight.onload = function () {
@@ -173,7 +186,8 @@ function etchRow(
       lineColor: lineColor,
       lineWidth: 3,
       position: (t + prng.next()) % 1,
-      dotColor: colors[Math.floor(6 * prng.next())],
+      dotColor,
+      // dotColor: colors[Math.floor(6 * prng.next())],
       dotSize,
     };
     etch(etchParams);
@@ -185,13 +199,17 @@ function etchRow(
 }
 
 function drawText() {
-  ctx.font = "italic 52px Merriweather";
+  ctx.font = "bold 62px Merriweather";
   ctx.fillStyle = tweaks.messageColor;
+  // ctx.strokeStyle = "white";
+  // ctx.lineWidth = 1.5;
   ctx.fillText("Etching Peace", 50, 525 - 70);
-  ctx.font = "italic 44px Merriweather";
-  ctx.fillText("into your New Year", 50, 505);
-  ctx.font = "22px Merriweather Sans";
-  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 575);
+  // ctx.strokeText("Etching Peace", 50, 525 - 70);
+  ctx.font = "bold 50px Merriweather";
+  ctx.fillText("into your New Year", 50, 523);
+  // ctx.strokeText("into your New Year", 50, 523);
+  ctx.font = "24px Merriweather Sans";
+  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 585);
 
   const down = 150;
   ctx.font = "bold 34px Merriweather Sans";
@@ -211,7 +229,7 @@ function drawText() {
   ctx.lineTo(455, 795 + down);
   ctx.stroke();
 
-  ctx.font = "300 15px Merriweather Sans";
+  ctx.font = "400 15px Merriweather Sans";
   ctx.fillText(
     "Artwork inspired by the glass etchings of Amy Gutmann",
     50,
@@ -227,9 +245,18 @@ function draw() {
   // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
-  ctx.globalAlpha = 1 - tweaks.trail;
-  ctx.fillStyle = tweaks.bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // ctx.globalAlpha = 1 - tweaks.trail;
+  // ctx.fillStyle = tweaks.bgColor;
+  // ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // ctx.globalAlpha = 1.0;
+
+  ctx.drawImage(agh, 0, 0);
+  const lg = ctx.createLinearGradient(0, 0, 1200, 0);
+  lg.addColorStop(0, "lightskyblue");
+  lg.addColorStop(1, "white");
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = lg;
+  ctx.fillRect(0, 0, 1200, 1050);
   ctx.globalAlpha = 1.0;
 
   const x = 1200 * tweaks.ratio + 20;
