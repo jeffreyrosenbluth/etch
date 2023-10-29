@@ -28,13 +28,14 @@ const EtchGray = "#aeb1c2";
 const tweaks = {
   guides: false,
   steps: record ? 200 : 500,
-  etchColor: "#011f5b", // aeb1c2
-  messageColor: "#990000", //b30015
-  footnoteColor: "#011f5b", // #f5f5f5
-  bgColor: "#000d30",
-  dotColor: "#ffffff",
-  dotSize: 7, // 9
-  trail: 0,
+  etchColor: "#ffffff", // aeb1c2
+  messageColor: PennBlue, //b30015
+  footnoteColor: PennBlue, // #f5f5f5
+  bgColor1: "#daeefb",
+  bgColor2: "#56b5f0",
+  bgOpacity: 0.85,
+  dotColor: PennRed,
+  dotSize: 8.5,
   snowSize: 8,
   logo: "Dark",
   snow: false,
@@ -53,7 +54,7 @@ const logoDark = new Image();
 const agh = new Image();
 logoDark.src = "UPenn_Logo_RGB_225.png";
 logoLight.src = "UPenn_Logo_Reverse_225.png";
-agh.src = "agh_south_rendering_light.jpeg";
+agh.src = "agh_south_rendering.jpg";
 
 agh.onload = function () {
   loadDarkLogo();
@@ -81,18 +82,20 @@ function setup() {
   gui.addColor(tweaks, "etchColor").name("Etch Color");
   gui.addColor(tweaks, "messageColor").name("Message Color");
   gui.addColor(tweaks, "footnoteColor").name("Footnote Color");
-  gui.addColor(tweaks, "bgColor").name("Background Color");
-  // gui.addColor(tweaks, "dotColor").name("Dot Color");
+  gui.addColor(tweaks, "bgColor1").name("Background Color 1");
+  gui.addColor(tweaks, "bgColor2").name("Background Color 2");
+  gui.add(tweaks, "bgOpacity", 0, 1, 0.01).name("Background Opacity");
+  gui.addColor(tweaks, "dotColor").name("Dot Color");
   gui.add(tweaks, "dotSize", 1, 20, 0.5).name("Dot Size");
   gui.add(tweaks, "snow").name("Snow");
   gui.add(tweaks, "snowSize", 1, 20, 0.5).name("Snow Size");
-  gui.add(tweaks, "trail", 0, 0.95, 0.05).name("Trail Length");
   gui.add(tweaks, "logo", ["Light", "Dark"]).name("Logo");
+  gui.add(tweaks, "guides").name("Guides");
 
   gui.close();
 
   const windowWidth = 1200;
-  const windowHeight = 1050;
+  const windowHeight = 900;
   canvas.width = Math.floor(windowWidth * window.devicePixelRatio);
   canvas.height = Math.floor(windowHeight * window.devicePixelRatio);
   canvas.style.width = windowWidth + "px";
@@ -100,7 +103,7 @@ function setup() {
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
   ctx.save();
-  ctx.fillStyle = tweaks.bgColor;
+  ctx.fillStyle = tweaks.bgColor2;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.restore();
   draw();
@@ -139,7 +142,7 @@ function etch(args: EtchParams) {
   let [tx, ty] = [0, 0];
   const delta = 0.005;
 
-  for (let t = 0; t <= 1; t += delta) {
+  for (let t = 0; t < 1; t += delta) {
     let [px, py] = get_position(args, t);
     if (t >= position && t < position + delta) {
       [tx, ty] = [px, py];
@@ -148,12 +151,14 @@ function etch(args: EtchParams) {
   }
   ctx.stroke();
   ctx.beginPath();
-
   ctx.save();
   [tx, ty] = get_position(args, position);
   ctx.ellipse(tx, ty, dotSize, dotSize, 0, 0, 2 * Math.PI);
   ctx.fillStyle = dotColor;
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 1;
   ctx.fill();
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -199,43 +204,40 @@ function etchRow(
 }
 
 function drawText() {
+  const h = 350;
   ctx.font = "bold 62px Merriweather";
   ctx.fillStyle = tweaks.messageColor;
-  // ctx.strokeStyle = "white";
-  // ctx.lineWidth = 1.5;
-  ctx.fillText("Etching Peace", 50, 525 - 70);
-  // ctx.strokeText("Etching Peace", 50, 525 - 70);
+  ctx.fillText("Etching Peace", 50, h);
   ctx.font = "bold 50px Merriweather";
-  ctx.fillText("into your New Year", 50, 523);
-  // ctx.strokeText("into your New Year", 50, 523);
+  ctx.fillText("into your New Year", 50, h + 68);
   ctx.font = "24px Merriweather Sans";
-  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, 585);
+  ctx.fillText("VIJAY KUMAR, Nemirovsky Family Dean", 50, h + 130);
 
-  const down = 150;
+  const down = 140;
   ctx.font = "bold 34px Merriweather Sans";
   ctx.fillStyle = tweaks.footnoteColor;
-  ctx.fillText("2024", 355, 750 + down);
+  ctx.fillText("2024", 425, 600 + down);
 
   if (tweaks.logo === "Light") {
-    ctx.drawImage(logoLight, 50, 700 + down);
+    ctx.drawImage(logoLight, 50, 550 + down);
   } else {
-    ctx.drawImage(logoDark, 50, 700 + down);
+    ctx.drawImage(logoDark, 50, 550 + down);
   }
 
-  // ctx.fillStyle = "white";
+  ctx.strokeStyle = tweaks.footnoteColor;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(50, 795 + down);
-  ctx.lineTo(455, 795 + down);
+  ctx.moveTo(50, 648 + down);
+  ctx.lineTo(525, 648 + down);
   ctx.stroke();
 
   ctx.font = "400 15px Merriweather Sans";
   ctx.fillText(
-    "Artwork inspired by the glass etchings of Amy Gutmann",
+    "Artwork inspired by the glass etchings of Amy Gutmann Hall.",
     50,
-    822 + down
+    822 - 140 + down
   );
-  ctx.fillText("Hall. Designed by Jeffrey M. Rosenbluth.", 50, 845 + down);
+  ctx.fillText("Designed by Jeffrey M Rosenbluth.", 50, 845 - 140 + down);
 }
 
 function draw() {
@@ -245,16 +247,12 @@ function draw() {
   // t goes from 0 to 1 used to positon the dot at as time moves.
   const t = (frame / tweaks.steps) % 1;
 
-  // ctx.globalAlpha = 1 - tweaks.trail;
-  // ctx.fillStyle = tweaks.bgColor;
-  // ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // ctx.globalAlpha = 1.0;
-
   ctx.drawImage(agh, 0, 0);
-  const lg = ctx.createLinearGradient(0, 0, 1200, 0);
-  lg.addColorStop(0, "lightskyblue");
-  lg.addColorStop(1, "white");
-  ctx.globalAlpha = 0.4;
+  const lg = ctx.createLinearGradient(0, 0, 1200, 900);
+  lg.addColorStop(0, tweaks.bgColor1);
+  lg.addColorStop(1, tweaks.bgColor2);
+  // lg.addColorStop(1, "white");
+  ctx.globalAlpha = tweaks.bgOpacity;
   ctx.fillStyle = lg;
   ctx.fillRect(0, 0, 1200, 1050);
   ctx.globalAlpha = 1.0;
@@ -263,7 +261,7 @@ function draw() {
   etchRow(
     x,
     50,
-    950,
+    800,
     8,
     t,
     tweaks.etchColor,
@@ -276,7 +274,7 @@ function draw() {
     etchRow(
       50,
       50,
-      950,
+      800,
       8,
       t,
       "#00000000",
@@ -301,10 +299,10 @@ function draw() {
     ctx.lineTo(1150, 1050);
     ctx.moveTo(0, 50);
     ctx.lineTo(1200, 50);
-    ctx.moveTo(0, 1000);
-    ctx.lineTo(1200, 1000);
-    ctx.moveTo(0, tweaks.ratio * 1050);
-    ctx.lineTo(1200, tweaks.ratio * 1050);
+    ctx.moveTo(0, 850);
+    ctx.lineTo(1200, 850);
+    ctx.moveTo(0, tweaks.ratio * 900);
+    ctx.lineTo(1200, tweaks.ratio * 900);
     ctx.stroke();
   }
 
